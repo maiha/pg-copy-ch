@@ -1,0 +1,8 @@
+/bin
+/lib
+/local
+/tmp
+/.crystal
+/.shards
+/.crystal-version
+/.pg-copy-ch

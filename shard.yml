@@ -1,0 +1,31 @@
+name: pg-copy-ch
+version: 0.3.0
+
+authors:
+  - maiha <maiha@wota.jp>
+
+targets:
+  pg-copy-ch:
+    main: src/main.cr
+  pg-copy-ch-dev:
+    main: src/main.cr
+
+dependencies:
+  var:
+    github: maiha/var.cr
+  try:
+    github: maiha/try.cr
+  cmds:
+    github: maiha/cmds.cr
+  toml-config:
+    github: maiha/toml-config.cr
+  clickhouse:
+    github: maiha/clickhouse.cr
+  pretty:
+    github: maiha/pretty.cr
+  shell:
+    github: maiha/shell.cr
+  shard:
+    github: maiha/shard.cr
+
+license: MIT

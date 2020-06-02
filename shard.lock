@@ -1,0 +1,42 @@
+version: 1.0
+shards:
+  clickhouse:
+    github: maiha/clickhouse.cr
+    version: 0.5.6
+
+  cmds:
+    github: maiha/cmds.cr
+    version: 0.3.7
+
+  jq:
+    github: maiha/jq.cr
+    version: 0.8.0
+
+  pretty:
+    github: maiha/pretty.cr
+    version: 0.9.11
+
+  shard:
+    github: maiha/shard.cr
+    version: 0.3.1
+
+  shell:
+    github: maiha/shell.cr
+    version: 0.4.2
+
+  toml:
+    github: maiha/toml.cr
+    version: 0.6.2
+
+  toml-config:
+    github: maiha/toml-config.cr
+    version: 0.6.1
+
+  try:
+    github: maiha/try.cr
+    version: 0.3.0
+
+  var:
+    github: maiha/var.cr
+    version: 1.2.0
+
