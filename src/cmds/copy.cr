@@ -23,7 +23,7 @@ Cmds.command "copy" do
       do_dryrun
     else
       cookbook.execute
-      puts cookbook.cooked_summary
+      logger.info cookbook.cooked_summary
     end
   end
 

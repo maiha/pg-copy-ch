@@ -12,6 +12,9 @@ module Core
 
   # config
   var config : Data::Config = load_config
+  def config_required : Bool
+    true
+  end
 
   # table
   var tables_all : Bool = false
@@ -35,21 +38,14 @@ module Core
 
   def before
     parser.parse(args)
-    if v = logger_path?
-      @logger = Pretty::Logger.build_logger({"path" => (v == "-") ? "STDOUT" : v})
-    else
-      @logger = Pretty::Logger.build_logger({"format" => "{{message}}"})
-    end
-    if debug
-      logger.level = "DEBUG"
-    end
+    @logger = build_logger
   end
 
   def current_config_path
     config_path? || File.join(workdir, "config")
   end
 
-  protected def load_config : Data::Config
+  protected def load_config : Data::Config?
     path = current_config_path
     File.exists?(path) || abort "fatal: config not found: #{path.inspect}\nRun '#{program} init' first."
     return Data::Config.load(path: path, logger: logger)
@@ -74,6 +70,18 @@ module Core
     parser = OptionParser.new
     setup_parser(parser)
     return parser
+  end
+
+  protected def build_logger
+    if v = logger_path?
+      logger = Pretty::Logger.build_logger({"path" => (v == "-") ? "STDOUT" : v, "format" => "{{mark}},[{{time}}] {{message}}"})
+    elsif config_required
+      logger = config.build_logger
+    else
+      logger = Pretty::Logger.build_logger({"format" => "{{message}}"})
+    end
+    logger.level = "DEBUG" if debug
+    return logger
   end
 
   def setup_parser(parser)

@@ -32,6 +32,9 @@ pg-copy-ch: build
 console:
 	@$(DOCKER) sh
 
+install: bin/pg-copy-ch
+	@cp -p $< /usr/local/bin/
+
 ######################################################################
 ### testing
 

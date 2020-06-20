@@ -31,7 +31,7 @@ abstract class Data::Recipe
   end
 
   def to_s(io : IO)
-    io << action
+    io << action.upcase
     io << " (#{reason})" if reason?
   end
 

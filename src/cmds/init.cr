@@ -1,6 +1,10 @@
 Cmds.command "init" do
   include Core
 
+  def config_required : Bool
+    false
+  end
+
   usage "# Create a config file"
   
   def run

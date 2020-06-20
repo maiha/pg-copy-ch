@@ -7,7 +7,7 @@ class Data::Cookbook
   var recipes : Array(Recipe)
   var config  : Config
   var workdir : String
-  var logger  = Logger.new(STDOUT)
+  var logger  : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(cookbook)"})
   var cooked  = Array(Chef::Cooked).new
 
   def initialize(@recipes, @config, @workdir, @logger)

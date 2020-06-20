@@ -20,7 +20,7 @@ class Data::Chef
   var config : Config
   var dir    : String
   var label  : String
-  var logger : Logger = Logger.new(STDOUT)
+  var logger : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(chef)"})
 
   delegate table, to: recipe
   delegate pg_db, pg_max_record_size, pg_ttl_count, to: config
@@ -94,6 +94,7 @@ class Data::Chef
   end
 
   def execute(recipe : Recipe::Replace) : OK
+    t1 = Pretty.now
     guard_already_updated(ttl: config.ch_ttl_data)
 
     if pg_max_record_size >= 0
@@ -103,11 +104,11 @@ class Data::Chef
 
     create_meta_new
     create_data_csv(ttl: config.pg_ttl_data)
-    import_data_new
+    count = import_data_new
     replace_by_new
 
-    #    logger.info "#{hint} REPLACED (#{sec_from(t1)}s)".colorize(:green)
-    return OK.new("REPLACE")
+    sec = write_result_json(t1, "replace", {"count" => count})
+    return OK.new("REPLACED %s (%.2fs)" % [count, sec])
   end
 
   private def guard_already_updated(ttl)
@@ -161,16 +162,23 @@ class Data::Chef
     logger.debug "  fetched #{data_csv}"
   end
 
-  private def import_data_new
-    # check whether empty or not to avoid error: "No data to insert"
+  private def get_data_count
     count = Shell::Seq.run!("wc -l < #{data_csv}").stdout.chomp.to_i64
-    if count <= 1               # header line only
+    return count - 1            # header line only
+  end
+
+  private def import_data_new : Int64
+    # check whether empty or not to avoid error: "No data to insert"
+    count = get_data_count
+    if count <= 0
       raise SKIP.new("SKIP No data to insert")
     end
     
     num = config.ch_allow_errors_num
     clickhouse_client("-mn -q 'SET input_format_allow_errors_num = #{num}; INSERT INTO #{table}_new FORMAT CSVWithNames' < #{data_csv}")
     logger.debug "  inserted #{data_csv} into #{table}_new"
+
+    return count
   end
 
   private def replace_by_new
@@ -183,6 +191,18 @@ class Data::Chef
 
     clickhouse_client("-mn -q '#{query}'")
     logger.debug "  replaced by new table"
+  end
+
+  private def write_result_json(t1, action, hash) : Float64
+    sec = (Pretty.now - t1).total_seconds
+    # write operation result into json
+    json = {
+      "table" => table,
+      "action" => action,
+      "sec" => sec,
+    }.merge(hash).to_json
+    File.write("#{action}.json", json)
+    return sec
   end
 
   private var meta_sql  = "meta.sql"

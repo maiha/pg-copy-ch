@@ -2,7 +2,7 @@ class Data::Config < TOML::Config
   INFINITE = -1_i64
 
   var path : String
-  var logger : Logger = Logger.new(STDOUT)
+  var logger : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(config)"})
   var table_recipes = Hash(String, Recipe).new
 
   str "postgres/host", pg_host
@@ -81,25 +81,58 @@ class Data::Config < TOML::Config
     raise NotFound.new("#{name} is not found")
   end
 
+  def build_logger : Logger
+    build_logger(self.toml["logger"]?)
+  end
+
+  def build_logger(v : Nil) : Logger
+    Pretty::Logger.build_logger({"path" => "STDERR", "format" => "(no 'config[logger]') {{message}}"})
+  end
+
+  def build_logger(hash : Hash) : Logger
+    hint = hash["name"]?.try{|s| "[#{s}]"} || ""
+    hash["path"] || abort "fatal: config[logger].path is missing"
+    logger = Pretty::Logger.build_logger(hash)
+    return logger
+  end
+
+  def build_logger(ary : Array) : Logger
+    Pretty::Logger.new(ary.map{|i| build_logger(i).as(Logger)})
+  end
+
+  def build_logger(v) : NoReturn
+    raise "fatal: config[logger] type error (#{v.class})"
+  end
+  
   def to_toml : String
     String.build do |s|
-      s.puts "[postgres]"
-      s.puts "host = %s" % pg_host.inspect
-      s.puts "port = %s" % pg_port.inspect
-      s.puts "user = %s" % pg_user.inspect
-      s.puts "db   = %s" % pg_db.inspect
-      s.puts "ttl_meta        = %s" % pg_ttl_meta.inspect
-      s.puts "ttl_data        = %s" % pg_ttl_data.inspect
-      s.puts "ttl_count       = %s" % pg_ttl_count.inspect
-      s.puts "max_record_size = %s" % pg_max_record_size.inspect
-      s.puts
-      s.puts "[clickhouse]"
-      s.puts "host = %s" % ch_host.inspect
-      s.puts "port = %s" % ch_port.inspect
-      s.puts "user = %s" % ch_user.inspect
-      s.puts "db   = %s" % ch_db.inspect
-      s.puts "ttl_data         = %s" % ch_ttl_data.inspect
-      s.puts "allow_errors_num = %s" % (ch_allow_errors_num? || 3)
+      s.puts <<-EOF
+        [postgres]
+        host = #{pg_host.inspect}
+        port = #{pg_port.inspect}
+        user = #{pg_user.inspect}
+        db   = #{pg_db.inspect}
+        ttl_meta        = #{pg_ttl_meta.inspect}
+        ttl_data        = #{pg_ttl_data.inspect}
+        ttl_count       = #{pg_ttl_count.inspect}
+        max_record_size = #{pg_max_record_size.inspect}
+
+        [clickhouse]
+        host = #{ch_host.inspect}
+        port = #{ch_port.inspect}
+        user = #{ch_user.inspect}
+        db   = #{ch_db.inspect}
+        ttl_data         = #{ch_ttl_data.inspect}
+        allow_errors_num = #{ch_allow_errors_num? || 3}
+
+        # format: https://github.com/maiha/composite_logger.cr#available-keywords
+        [[logger]]
+        path     = "STDOUT"
+        level    = "INFO"
+        format   = "{{mark}},[{{time=%H:%M:%S}}] {{message}}"
+        colorize = true
+        EOF
+
       s.puts
       s.puts "[table]"
       if table_recipes.any?
