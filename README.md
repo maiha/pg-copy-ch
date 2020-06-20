@@ -117,6 +117,31 @@ orders FOUND      (will) Replace
 xxx    N/A        Ignore (PG schema not found)
 ```
 
+## Find performance killers
+
+First, run with logging by `-l log`.
+
+```console
+$ pg-copy-ch -a -l log
+```
+
+Find worst record counts.
+
+```console
+$ grep REPLACED log | sort -n -k 5 -r | head -3
+[05:28:26] (092/428) creatives    REPLACED 11989140 (37.01s)
+[05:29:28] (157/428) constraints  REPLACED 5765600 (2.79s)
+[05:31:15] (280/428) eviews       REPLACED 4460582 (5.67s)
+```
+
+Find worst time.
+```console
+$ grep REPLACED log | sort -n -t'(' -k 3 -r | head -3
+[05:28:26] (092/428) creatives    REPLACED 11989140 (37.01s)
+[05:26:38] (008/428) schedules    REPLACED 1115075 (22.90s)
+[05:32:47] (343/428) statistics   REPLACED 2443266 (8.98s)
+```
+
 ## Development
 
 * using [Crystal](http://crystal-lang.org/) on docker
