@@ -75,7 +75,8 @@ class Data::Chef
     Pretty::File.write(count_sql, query)
     logger.debug "  created data count #{count_sql}"
 
-    psql("-f #{count_sql} #{pg_db} > #{count_csv}")
+    psql("-f #{count_sql} #{pg_db} > #{count_csv}.tmp")
+    Pretty::File.mv("#{count_csv}.tmp", count_csv)
     logger.debug "  fetched data count #{count_csv}"
 
     count = File.read(count_csv).to_i64

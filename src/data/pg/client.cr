@@ -36,7 +36,8 @@ class Data::Pg::Client
     Pretty::File.write(sql, data)
     logger.debug "pg: created #{sql}"
 
-    psql("-f #{sql} #{pg_db} > #{csv}")
+    psql("-f #{sql} #{pg_db} > #{csv}.tmp")
+    Pretty::File.mv("#{csv}.tmp", csv)
 
     return File.read(csv)
   end
