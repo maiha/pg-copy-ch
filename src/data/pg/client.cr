@@ -10,8 +10,8 @@ class Data::Pg::Client
 
   def initialize(@config)
     @workdir = File.dirname(config.path)
-    @meta_sql_path = "#{workdir}/pg_meta.sql"
-    @meta_csv_path = "#{workdir}/pg_meta.csv"
+    @meta_sql_path = "#{workdir}/pg/meta.sql"
+    @meta_csv_path = "#{workdir}/pg/meta.csv"
   end
 
   def metas : Hash(String, Meta)

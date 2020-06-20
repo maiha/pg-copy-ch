@@ -20,23 +20,11 @@ class Data::Config < TOML::Config
   str "clickhouse/db"  , ch_db
   i64 "clickhouse/ttl_data"        , ch_ttl_data
   i64 "clickhouse/allow_errors_num", ch_allow_errors_num
+  str "clickhouse/engine"          , ch_engine
+  str "clickhouse/replace_query"   , ch_replace_query
   
   def initialize(toml, @logger = nil)
     super(toml)
-    build_recipes!
-  end
-  
-  def build_recipes!
-    case v = self["table"]?
-    when Nil
-      # nop
-    when Hash
-      v.each do |table, setting|
-        table_recipes[table] = Recipe.from_toml(table, setting)
-      end
-    else
-      logger.warn "warn: config:[table] expected Hash, but got #{v.class} (IGNORED)"
-    end
   end
   
   def pg_ttl_meta : Int64
@@ -105,43 +93,39 @@ class Data::Config < TOML::Config
   end
   
   def to_toml : String
-    String.build do |s|
-      s.puts <<-EOF
-        [postgres]
-        host = #{pg_host.inspect}
-        port = #{pg_port.inspect}
-        user = #{pg_user.inspect}
-        db   = #{pg_db.inspect}
-        ttl_meta        = #{pg_ttl_meta.inspect}
-        ttl_data        = #{pg_ttl_data.inspect}
-        ttl_count       = #{pg_ttl_count.inspect}
-        max_record_size = #{pg_max_record_size.inspect}
+    <<-EOF
+      [postgres]
+      host = #{pg_host.inspect}
+      port = #{pg_port.inspect}
+      user = #{pg_user.inspect}
+      db   = #{pg_db.inspect}
+      ttl_meta        = #{pg_ttl_meta.inspect}
+      ttl_data        = #{pg_ttl_data.inspect}
+      ttl_count       = #{pg_ttl_count.inspect}
+      max_record_size = #{pg_max_record_size.inspect}
 
-        [clickhouse]
-        host = #{ch_host.inspect}
-        port = #{ch_port.inspect}
-        user = #{ch_user.inspect}
-        db   = #{ch_db.inspect}
-        ttl_data         = #{ch_ttl_data.inspect}
-        allow_errors_num = #{ch_allow_errors_num? || 3}
+      [clickhouse]
+      host = #{ch_host.inspect}
+      port = #{ch_port.inspect}
+      user = #{ch_user.inspect}
+      db   = #{ch_db.inspect}
+      ttl_data         = #{ch_ttl_data.inspect}
+      engine           = "Log"
+      allow_errors_num = 3
+      replace_query    = """
+      CREATE TABLE IF NOT EXISTS {{table}} AS {{table}}_new;
+      DROP TABLE IF EXISTS {{table}}_old;
+      RENAME TABLE {{table}} TO {{table}}_old, {{table}}_new TO {{table}};
+      DROP TABLE IF EXISTS {{table}}_old;
+      """
 
-        # format: https://github.com/maiha/composite_logger.cr#available-keywords
-        [[logger]]
-        path     = "STDOUT"
-        level    = "INFO"
-        format   = "{{mark}},[{{time=%H:%M:%S}}] {{message}}"
-        colorize = true
-        EOF
-
-      s.puts
-      s.puts "[table]"
-      if table_recipes.any?
-        maxsize = table_recipes.keys.map(&.size).max
-        table_recipes.each do |table, recipe|
-          s.puts recipe.to_toml(maxsize: maxsize)
-        end        
-      end
-    end
+      # format: https://github.com/maiha/composite_logger.cr#available-keywords
+      [[logger]]
+      path     = "STDOUT"
+      level    = "INFO"
+      format   = "[{{time=%H:%M:%S}}] {{message}}"
+      colorize = true
+      EOF
   end
 
   def self.from(cmd : Cmds::Cmd) : Config

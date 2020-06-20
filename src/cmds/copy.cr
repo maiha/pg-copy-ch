@@ -79,14 +79,13 @@ Cmds.command "copy" do
   end
 
   private def build_cookbook
-    table_recipes = config.table_recipes
-    filter_tables_by_options!(table_recipes)
-    table_recipes.any? || abort "No table settings are found. Please edit 'config:[table]'"
-    cookbook = Data::Cookbook.new(table_recipes.values, config, workdir, logger)
+    recipes = current_recipes
+    recipes.any? || abort "No table settings are found. Please edit 'config:[table]'"
+    cookbook = Data::Cookbook.new(recipes, config, workdir, logger)
     return cookbook
   end
 
-  protected def filter_tables_by_options!(table_recipes : Hash(String, Data::Recipe))
+  protected def current_recipes : Array(Data::Recipe)
     op_cnt = 0
     op_cnt +=1 if tables_all
     op_cnt +=1 if tables_include_from?
@@ -98,12 +97,17 @@ Cmds.command "copy" do
       usage = Pretty.lines(usages_for_task, indent: "  ", delimiter: " ")
       abort "Please specify target tables by '-a', '-t', '-f', '-F'.\n#{usage}"
     when 1
+      table_recipes = Hash(String, Data::Recipe).new
+      config.pg_client.metas.each do |table, meta|
+        table_recipes[table] = Data::Recipe::Replace.new(table)
+      end
+      
       # if tables_all # NOP
       if tables_include_from?
         regexs = load_tables_from(tables_include_from).map{|v| compile_regex_or_string(v)}
         table_recipes.keys.each do |table|
           unless regexs.any?{|r| r === table}
-            table_recipes[table] =  Data::Recipe::Skip.new(table, reason: "removed by -f")
+            table_recipes[table] = Data::Recipe::Skip.new(table, reason: "removed by -f")
           end
         end
       end
@@ -127,6 +131,7 @@ Cmds.command "copy" do
         table_recipes.clear
         table_recipes.merge!(new_recipes)
       end
+      return table_recipes.values
     else
       usage = Pretty.lines(usages_for_task, indent: "  ", delimiter: " ")
       abort "'-a', '-t', '-f', '-F' are exclusive. Please specify *ONE* of them.\n#{usage}"

@@ -36,7 +36,7 @@ class Data::Cookbook
     max = map(&.table.size).max
     each_with_index do |recipe, i|
       label = table_label(i+1, max, recipe.table)
-      dir   = "#{workdir}/tables/#{recipe.table}"
+      dir   = "#{workdir}/copying/#{recipe.table}"
       Pretty::File.mkdir_p(dir)
       Dir.cd(dir) do
         chef  = Chef.new(recipe, config, label: label, logger: logger)

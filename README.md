@@ -7,8 +7,14 @@ Simply copy the current PostgreSQL data to ClickHouse
 * Easy      : Include/Exclude tables by regex. Skip by max data count, ttl.
 
 ```console
-$ pg-copy-ch copy -t table1,table2
-$ pg-copy-ch copy --all
+$ psql mydb -c "SELECT count(*) FROM users"             # => 3835
+$ clickhouse-client -q "CREATE DATABASE pg"
+
+$ pg-copy-ch init config --pg-db=mydb --ch-db=pg
+$ pg-copy-ch copy -t users
+[09:05:28] (1/1) users REPLACED 3835 (0.35s)
+
+$ clickhouse-client -q "SELECT count(*) FROM pg.users"  # => 3835
 ```
 
 ## Installation
@@ -22,42 +28,25 @@ $ wget https://github.com/maiha/pg-copy-ch/releases/latest/download/pg-copy-ch
 
 ## Usage
 
-All commands can be executed with arguments, as shown below.
-
-```console
-$ pg-copy-ch copy --pg-host=pg-prod --pg-user=reader --pg-db=system --tables=users,roles,schedules ...
-```
-
-But it is recommended that you create a configuration file,
-as doing this every time is painful and error-prone.
-
 ### config
 
-```console
-$ pg-copy-ch init
-Initialized empty cofig in .pg-copy-ch/config
+First, create config file by `init config`.
 
-$ cat .pg-copy-ch/config
-[postgres]
-host = "localhost"
-port = 5432
-user = "postgres"
-...
+```console
+$ pg-copy-ch init config
+Initialized empty cofig in .pg-copy-ch/config
 ```
 
-If you initialize with the pg connection information, the table names are also written out.
+Then, edit `config` file about connection settings for PostgreSQL and ClickHouse.
 
 ```console
-$ pg-copy-ch init --pg-host=pg-prod --pg-user=reader --pg-db=system
-Reinitialized existing config in .pg-copy-ch/config
-
-$ tail .pg-copy-ch/config
+$ vi .pg-copy-ch/config
+[postgres]
+host = "pg-server1"
+port = 5432
+user = "postgres"
+db   = "mydb"
 ...
-[table]
-budgets   = "REPLACE"
-creatives = "REPLACE"
-orders    = "REPLACE"
-schedules = "REPLACE"
 ```
 
 ### Copy
@@ -66,7 +55,7 @@ Once you setup config, you can run `copy` with specifying the table by one of '-
 
 ```console
 $ pg-copy-ch copy -t users,orders # Copy only the specified tables
-$ pg-copy-ch copy -a              # Copy all tables in config
+$ pg-copy-ch copy -a              # Copy all tables
 $ pg-copy-ch copy -f <ALLOW_FILE> # Copy all tables both in the config and in <ALLOW＿FILE>.
 $ pg-copy-ch copy -F <DENY_FILE>  # Copy all tables in the config and NOT in <DENY_FILE>.
 ```
@@ -74,21 +63,23 @@ $ pg-copy-ch copy -F <DENY_FILE>  # Copy all tables in the config and NOT in <DE
 ### Filter by allow
 
 '-f <FILE>' obtains allow table names from the FILE, one per line.
-These table names must exist in the **config:[table]** too.
-In short, this works as `cat config:[table] | grep -f FILE` in unix.
+We can create it by the `init tables` command.
 
 ```console
-$ vi tables
-users
-orders
-
-$ pg-copy-ch copy -f tables
+$ pg-copy-ch init tables
+Created .pg-copy-ch/tables
 ```
 
-It is same as
+Then, edit or comment out as you like.
 
 ```console
-$ pg-copy-ch copy -t users,orders
+$ vi .pg-copy-ch/tables
+# budgets
+creatives
+orders
+...
+
+$ pg-copy-ch copy -f .pg-copy-ch/tables
 ```
 
 ### Filter by deny
@@ -119,13 +110,13 @@ xxx    N/A        Ignore (PG schema not found)
 
 ## Find performance killers
 
-First, run with logging by `-l log`.
+First, run and generate log.
 
 ```console
-$ pg-copy-ch -a -l log
+$ pg-copy-ch -a | tee log
 ```
 
-Find worst record counts.
+##### worst record counts
 
 ```console
 $ grep REPLACED log | sort -n -k 5 -r | head -3
@@ -134,7 +125,8 @@ $ grep REPLACED log | sort -n -k 5 -r | head -3
 [05:31:15] (280/428) eviews       REPLACED 4460582 (5.67s)
 ```
 
-Find worst time.
+##### worst time
+
 ```console
 $ grep REPLACED log | sort -n -t'(' -k 3 -r | head -3
 [05:28:26] (092/428) creatives    REPLACED 11989140 (37.01s)

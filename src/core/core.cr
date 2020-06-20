@@ -12,9 +12,7 @@ module Core
 
   # config
   var config : Data::Config = load_config
-  def config_required : Bool
-    true
-  end
+  var config_required : Bool = true
 
   # table
   var tables_all : Bool = false
@@ -47,7 +45,7 @@ module Core
 
   protected def load_config : Data::Config?
     path = current_config_path
-    File.exists?(path) || abort "fatal: config not found: #{path.inspect}\nRun '#{program} init' first."
+    File.exists?(path) || abort "fatal: config not found: #{path.inspect}\nRun '#{program} init config' first."
     return Data::Config.load(path: path, logger: logger)
   end
 

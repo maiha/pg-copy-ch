@@ -104,8 +104,8 @@ class Data::Chef
 
     create_meta_new
     create_data_csv(ttl: config.pg_ttl_data)
-    count = import_data_new
-    replace_by_new
+    import_data_new
+    count = replace_by_new
 
     sec = write_result_json(t1, "replace", {"count" => count})
     return OK.new("REPLACED %s (%.2fs)" % [count, sec])
@@ -129,11 +129,13 @@ class Data::Chef
   end
 
   private def create_meta_new
-    data = String.build do |s|
-      s.puts "DROP TABLE IF EXISTS #{table}_new;"
-      s.puts recipe.pg.to_clickhouse.tap(&.table = "#{table}_new").to_sql
-    end
+    create = recipe.pg.to_clickhouse
+    create.table  = "#{table}_new"
+    create.engine = config.ch_engine
+
+    data = "DROP TABLE IF EXISTS #{table}_new;\n#{create.to_sql}"
     Pretty::File.write(meta_sql, data)
+
     logger.debug "  created #{meta_sql}"
     clickhouse_client("-mn < #{meta_sql}")
   end
@@ -162,14 +164,10 @@ class Data::Chef
     logger.debug "  fetched #{data_csv}"
   end
 
-  private def get_data_count
-    count = Shell::Seq.run!("wc -l < #{data_csv}").stdout.chomp.to_i64
-    return count - 1            # header line only
-  end
-
   private def import_data_new : Int64
     # check whether empty or not to avoid error: "No data to insert"
-    count = get_data_count
+    count = Shell::Seq.run!("wc -l < #{data_csv}").stdout.chomp.to_i64
+    count -= 1            # with headers
     if count <= 0
       raise SKIP.new("SKIP No data to insert")
     end
@@ -181,16 +179,16 @@ class Data::Chef
     return count
   end
 
-  private def replace_by_new
-    query = <<-EOF
-      CREATE TABLE IF NOT EXISTS #{table} AS #{table}_new;
-      DROP TABLE IF EXISTS #{table}_old;
-      RENAME TABLE #{table} TO #{table}_old, #{table}_new TO #{table};
-      DROP TABLE IF EXISTS #{table}_old;
-      EOF
-
-    clickhouse_client("-mn -q '#{query}'")
-    logger.debug "  replaced by new table"
+  private def replace_by_new : Int64
+    query = config.ch_replace_query.gsub("{{table}}", table)
+    Pretty::File.write(replace_sql, query)
+    
+    clickhouse_client("-mn < #{replace_sql}")
+    clickhouse_client("-mn -q 'SELECT count(*) FROM #{table} FORMAT TSV' > ch.cnt.tmp")
+    Pretty::File.mv("ch.cnt.tmp", "ch.cnt")
+    count = File.read("ch.cnt").to_i64
+    logger.debug "  replaced by new table (#{count})"
+    return count
   end
 
   private def write_result_json(t1, action, hash) : Float64
@@ -205,10 +203,11 @@ class Data::Chef
     return sec
   end
 
-  private var meta_sql  = "meta.sql"
-  private var meta_csv  = "meta.csv"
-  private var data_sql  = "data.sql"
-  private var data_csv  = "data.csv"
-  private var count_sql = "count.sql"
-  private var count_csv = "count.csv"
+  private var meta_sql    = "meta.sql"
+  private var meta_csv    = "meta.csv"
+  private var data_sql    = "data.sql"
+  private var data_csv    = "data.csv"
+  private var count_sql   = "count.sql"
+  private var count_csv   = "count.csv"
+  private var replace_sql = "replace.sql"
 end
