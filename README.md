@@ -12,9 +12,13 @@ $ pg-copy-ch copy --all
 ```
 
 ## Installation
-* x86_64 static binary: https://github.com/maiha/pg-copy-ch/releases
 * **psql** : required for PostgreSQL client
 * **clickhouse-client** : required for ClickHouse client
+* x86_64 static binary: https://github.com/maiha/pg-copy-ch/releases
+
+```console
+$ wget https://github.com/maiha/pg-copy-ch/releases/latest/download/pg-copy-ch
+```
 
 ## Usage
 
@@ -24,7 +28,7 @@ All commands can be executed with arguments, as shown below.
 $ pg-copy-ch copy --pg-host=pg-prod --pg-user=reader --pg-db=system --tables=users,roles,schedules ...
 ```
 
-It is recommended that you create a configuration file,
+But it is recommended that you create a configuration file,
 as doing this every time is painful and error-prone.
 
 ### config
@@ -41,7 +45,7 @@ user = "postgres"
 ...
 ```
 
-When initialized with pg connection information, table information is also written out.
+If you initialize with the pg connection information, the table names are also written out.
 
 ```console
 $ pg-copy-ch init --pg-host=pg-prod --pg-user=reader --pg-db=system
@@ -61,7 +65,7 @@ schedules = "REPLACE"
 Once you setup config, you can run `copy` with specifying the table by one of '-a', '-t', '-f', '-F'.
 
 ```console
-$ pg-copy-ch copy -t users,orders # Copy specified tables
+$ pg-copy-ch copy -t users,orders # Copy only the specified tables
 $ pg-copy-ch copy -a              # Copy all tables in config
 $ pg-copy-ch copy -f <ALLOW_FILE> # Copy all tables both in the config and in <ALLOW＿FILE>.
 $ pg-copy-ch copy -F <DENY_FILE>  # Copy all tables in the config and NOT in <DENY_FILE>.
@@ -81,7 +85,7 @@ orders
 $ pg-copy-ch copy -f tables
 ```
 
-is same as
+It is same as
 
 ```console
 $ pg-copy-ch copy -t users,orders
@@ -119,6 +123,13 @@ xxx    N/A        Ignore (PG schema not found)
 
 ```console
 $ make
+```
+
+## TODO: Test
+
+Not implemented yet.
+
+```
 $ make test
 ```
 

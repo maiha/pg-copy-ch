@@ -1,7 +1,7 @@
 Cmds.command "copy" do
   include Core
 
-  usage "-t users,orders # Copy specified tables"
+  usage "-t users,orders # Copy only the specified tables"
   usage "-a              # Copy all tables in config"
   usage "-f <ALLOW_FILE> # Copy all tables both in the config and in <ALLOW＿FILE>."
   usage "-F <DENY_FILE>  # Copy all tables in the config and NOT in <DENY_FILE>."
