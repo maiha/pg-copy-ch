@@ -39,7 +39,7 @@ install: bin/pg-copy-ch
 ### testing
 
 .PHONY: ci
-ci: compile test
+ci: pg-copy-ch
 
 test: bin/pg-copy-ch-dev
 	@docker-compose run test
