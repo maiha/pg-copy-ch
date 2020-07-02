@@ -134,6 +134,29 @@ $ grep REPLACED log | sort -n -t'(' -k 3 -r | head -3
 [05:32:47] (343/428) statistics   REPLACED 2443266 (8.98s)
 ```
 
+## PostgreSQL
+
+### psql
+
+For example, if you want to use SSL, you can specify the command directly to `psql` in config.
+Here, '%' prefixed words are replaced by those settings automatically.
+
+```toml
+[postgres]
+psql = "psql -h %host -p %port -U %user %db -w --dbname=postgres --set=sslmode=require --set=sslrootcert=./sslcert.crt"
+```
+
+### authorization
+
+Using `~/.pgpass` is a easiest way to specify a password.
+
+If it is difficult to write to HOME by cron execution, you can embed it directly into the config file using `psql` above.
+
+```toml
+[postgres]
+psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
+```
+
 ## Development
 
 * using [Crystal](http://crystal-lang.org/) on docker

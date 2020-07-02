@@ -23,7 +23,7 @@ class Data::Chef
   var logger : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(chef)"})
 
   delegate table, to: recipe
-  delegate pg_db, pg_max_record_size, pg_ttl_count, to: config
+  delegate pg_max_record_size, pg_ttl_count, to: config
   delegate psql, clickhouse_client, to: config
 
   def initialize(@recipe, @config, @label, @logger)
@@ -75,7 +75,7 @@ class Data::Chef
     Pretty::File.write(count_sql, query)
     logger.debug "  created data count #{count_sql}"
 
-    psql("-f #{count_sql} #{pg_db} > #{count_csv}.tmp")
+    psql("-f #{count_sql} > #{count_csv}.tmp")
     Pretty::File.mv("#{count_csv}.tmp", count_csv)
     logger.debug "  fetched data count #{count_csv}"
 
@@ -158,7 +158,7 @@ class Data::Chef
     logger.debug "  created #{data_sql}"
 
     # write tmp then move it to avoid file creation on error
-    psql("-f #{data_sql} #{pg_db} > #{data_csv}.tmp")
+    psql("-f #{data_sql} > #{data_csv}.tmp")
     Pretty::File.mv("#{data_csv}.tmp", data_csv)
     
     logger.debug "  fetched #{data_csv}"
