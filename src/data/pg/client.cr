@@ -6,7 +6,7 @@ class Data::Pg::Client
   private var meta_csv_path : String
 
   delegate logger, to: config
-  delegate pg_host, pg_port, pg_user, pg_db, pg_ttl_meta, to: config
+  delegate pg_ttl_meta, to: config
 
   def initialize(@config)
     @workdir = File.dirname(config.path)
@@ -36,15 +36,17 @@ class Data::Pg::Client
     Pretty::File.write(sql, data)
     logger.debug "pg: created #{sql}"
 
-    psql("-f #{sql} #{pg_db} > #{csv}.tmp")
+    psql("-f #{sql} > #{csv}.tmp")
     Pretty::File.mv("#{csv}.tmp", csv)
 
     return File.read(csv)
   end
 
   def psql(cmd : String)
+    psql = config.resolve(config.pg_psql, group: "postgres")
+
     shell = Shell::Seq.new(abort_on_error: true)
-    shell.run!("psql -h '#{pg_host}' -p #{pg_port} -U '#{pg_user}' -w #{cmd}")
+    shell.run!("#{psql} #{cmd}")
     shell.stderr.empty? || raise shell.stderr
   end
 end

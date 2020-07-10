@@ -9,6 +9,7 @@ class Data::Config < TOML::Config
   i64 "postgres/port", pg_port
   str "postgres/user", pg_user
   str "postgres/db"  , pg_db
+  str "postgres/psql", pg_psql
   i64 "postgres/ttl_meta"       , pg_ttl_meta
   i64 "postgres/ttl_data"       , pg_ttl_data
   i64 "postgres/ttl_count"      , pg_ttl_count
@@ -26,7 +27,11 @@ class Data::Config < TOML::Config
   def initialize(toml, @logger = nil)
     super(toml)
   end
-  
+
+  def pg_psql : String
+    pg_psql? || "psql -h %host -p %port -U %user %db -w"
+  end
+
   def pg_ttl_meta : Int64
     pg_ttl_meta? || 86400_i64
   end
@@ -58,6 +63,18 @@ class Data::Config < TOML::Config
   end
 
   delegate clickhouse_client, to: ch_client
+
+  def resolve(tmpl : String, group : String)
+    return tmpl if !tmpl.includes?('%')
+
+    table = self.toml[group]?
+    case table
+    when Hash
+      return tmpl.gsub(/%([a-zA-Z0-9_]+)/) { (table[$1]? || "%#{$1}").to_s }
+    else
+      raise ArgumentError.new("fatal: no tables named #{group.inspect} in config. (while resolving #{tmpl.inspect})")
+    end
+  end
   
   protected def not_found(key)
     case key
@@ -99,6 +116,10 @@ class Data::Config < TOML::Config
       port = #{pg_port.inspect}
       user = #{pg_user.inspect}
       db   = #{pg_db.inspect}
+      ### If you use arbitrary settings, such as an SSL connection and specifying a password, please update the 'psql' command.
+      psql = "psql -h %host -p %port -U %user %db -w"
+      # psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
+      # psql = "psql -h %host -p %port -U %user %db -w --dbname=postgres --set=sslmode=require --set=sslrootcert=./sslcert.crt"
       ttl_meta        = #{pg_ttl_meta.inspect}
       ttl_data        = #{pg_ttl_data.inspect}
       ttl_count       = #{pg_ttl_count.inspect}
