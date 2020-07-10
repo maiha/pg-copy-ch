@@ -46,6 +46,7 @@ class Data::Pg::Client
     psql = config.resolve(config.pg_psql, group: "postgres")
 
     shell = Shell::Seq.new(abort_on_error: true)
+    logger.debug "pg: #{psql} #{cmd}"
     shell.run!("#{psql} #{cmd}")
     shell.stderr.empty? || raise shell.stderr
   end

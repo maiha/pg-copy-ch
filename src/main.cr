@@ -31,7 +31,8 @@ class Main < Cmds::Cli::Default
       super(args)
     end
   rescue err
-    STDERR.puts err.to_s.chomp.colorize(:red)
+    msg = err.to_s.chomp
+    STDERR.puts msg.colorize(:red) if msg.presence
     exit 100
   end  
 end

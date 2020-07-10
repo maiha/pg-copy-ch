@@ -22,8 +22,9 @@ Cmds.command "copy" do
     if dryrun
       do_dryrun
     else
-      cookbook.execute
-      logger.info cookbook.cooked_summary
+      cooked = cookbook.execute
+      logger.info cooked
+      raise "" if cooked.errors.any?
     end
   end
 

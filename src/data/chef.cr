@@ -3,6 +3,8 @@
 
 class Data::Chef
   class Cooked < Exception
+    var error : Bool = false
+
     def initialize(msg = nil)
       super(msg || self.class.name.to_s)
     end
@@ -12,10 +14,13 @@ class Data::Chef
     end
   end
   class OK     < Cooked; end
-  class ERROR  < Cooked; end
   class SKIP   < Cooked; end
   class IGNORE < Cooked; end
 
+  class ERROR  < Cooked
+    var error : Bool = true
+  end
+  
   var recipe : Recipe
   var config : Config
   var dir    : String

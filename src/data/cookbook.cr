@@ -8,7 +8,6 @@ class Data::Cookbook
   var config  : Config
   var workdir : String
   var logger  : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(cookbook)"})
-  var cooked  = Array(Chef::Cooked).new
 
   def initialize(@recipes, @config, @workdir, @logger)
     pg_metas = config.pg_client.metas
@@ -31,8 +30,11 @@ class Data::Cookbook
   def to(klass : Recipe.class) : Cookbook
     Cookbook.new(recipes.map(&.to(klass)), config, workdir, logger)
   end
-  
-  def execute
+
+  # executes all recipes and stores those result into cocked.
+  def execute : Cooked
+    cooked = Cooked.new
+
     max = map(&.table.size).max
     each_with_index do |recipe, i|
       label = table_label(i+1, max, recipe.table)
@@ -45,19 +47,8 @@ class Data::Cookbook
         #logger.info "#{hint} COUNT (%.1fs)" % span.total_seconds
       end
     end
-  end
 
-  def cooked_summary : String
-    grouped = cooked.group_by(&.class.to_s)
-    keys = {{ Data::Chef::Cooked.subclasses.map(&.stringify) }}
-    results = keys.map{|key|
-      if ary = grouped[key]?
-        "%s:%d" % [key.sub(/^.*::/,"").downcase, ary.size]
-      else
-        nil
-      end
-    }.compact
-    results.join(", ")
+    return cooked
   end
 
   private def table_label(n, max, table)
@@ -74,5 +65,28 @@ class Data::Cookbook
     }
     headers = %w( Table PostgreSQL Action )
     return Pretty.lines(lines, headers: headers, delimiter: " ").chomp
+  end
+
+  class Cooked
+    include Enumerable(Chef::Cooked)
+    delegate each, :<<, to: array
+    var array = Array(Chef::Cooked).new
+
+    def errors : Array(Chef::ERROR)
+      self.select(&.is_a?(Chef::ERROR)).map(&.as(Chef::ERROR))
+    end
+
+    def to_s(io : IO)
+      grouped = group_by(&.class.to_s)
+      keys = {{ Data::Chef::Cooked.subclasses.map(&.stringify) }}
+      results = keys.map{|key|
+        if ary = grouped[key]?
+          "%s:%d" % [key.sub(/^.*::/,"").downcase, ary.size]
+        else
+          nil
+        end
+      }.compact
+      io << results.join(", ")
+    end
   end
 end
