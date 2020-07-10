@@ -7,14 +7,19 @@ Cmds.command "init" do
     path = current_config_path
     msg  = File.exists?(path) ? "Reinitialized existing config" : "Initialized empty config"
     @config = Data::Config.from(self)
+
+    config.dryrun(msg)
     Pretty::File.write(path, config.to_toml)
     logger.info "#{msg} in #{path}"
   end
 
   task "tables" do
     path = File.join(workdir, "tables")
-    data = buf = config.pg_client.metas.keys.sort.join("\n")
+    data = config.pg_client.metas.keys.sort.join("\n")
+    msg  = "Created #{path}"
+
+    config.dryrun(msg)
     Pretty::File.write(path, data)
-    logger.info "Created #{path}"
+    logger.info msg
   end
 end

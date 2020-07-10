@@ -1,7 +1,8 @@
 class Data::Config < TOML::Config
   INFINITE = -1_i64
 
-  var path : String
+  var path   : String
+  var dryrun : Bool
   var logger : Logger = Pretty::Logger.build_logger({"path" => "STDOUT", "name" => "(config)"})
   var table_recipes = Hash(String, Recipe).new
 
@@ -24,7 +25,7 @@ class Data::Config < TOML::Config
   str "clickhouse/engine"          , ch_engine
   str "clickhouse/replace_query"   , ch_replace_query
   
-  def initialize(toml, @logger = nil)
+  def initialize(toml, @dryrun, @logger = nil)
     super(toml)
   end
 
@@ -75,7 +76,13 @@ class Data::Config < TOML::Config
       raise ArgumentError.new("fatal: no tables named #{group.inspect} in config. (while resolving #{tmpl.inspect})")
     end
   end
-  
+
+  def dryrun(msg : String)
+    if dryrun?
+      raise Dryrun.new(msg)
+    end
+  end
+
   protected def not_found(key)
     case key
     when %r{^(.*?)/(.*)}
@@ -116,7 +123,6 @@ class Data::Config < TOML::Config
       port = #{pg_port.inspect}
       user = #{pg_user.inspect}
       db   = #{pg_db.inspect}
-      ### If you use arbitrary settings, such as an SSL connection and specifying a password, please update the 'psql' command.
       psql = "psql -h %host -p %port -U %user %db -w"
       # psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
       # psql = "psql -h %host -p %port -U %user %db -w --dbname=postgres --set=sslmode=require --set=sslrootcert=./sslcert.crt"
@@ -151,7 +157,7 @@ class Data::Config < TOML::Config
 
   def self.from(cmd : Cmds::Cmd) : Config
     toml = TOML.parse("")
-    config = Config.new(toml, logger: cmd.logger)
+    config = Config.new(toml, dryrun: cmd.dryrun, logger: cmd.logger)
     config.path = cmd.current_config_path
 
     # postgres
@@ -169,9 +175,9 @@ class Data::Config < TOML::Config
     return config
   end
 
-  def self.load(path : String, logger : Logger) : Config
+  def self.load(path : String, dryrun : Bool, logger : Logger) : Config
     toml = TOML.parse_file(path)
-    config = new(toml, logger: logger)
+    config = new(toml, dryrun: dryrun, logger: logger)
     config.path = path
     return config
   end

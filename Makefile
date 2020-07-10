@@ -39,10 +39,13 @@ install: bin/pg-copy-ch
 ### testing
 
 .PHONY: ci
-ci: pg-copy-ch
+ci: compile test
 
 test: bin/pg-copy-ch-dev
-	@docker-compose run test
+	@docker-compose run --rm test ./tests/run
+
+#- PG_HOST=pg
+#- CH_HOST=ch
 
 ######################################################################
 ### versioning

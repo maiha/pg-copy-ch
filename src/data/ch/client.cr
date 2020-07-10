@@ -2,7 +2,7 @@ class Data::Ch::Client
   var config : Data::Config
   var workdir : String
 
-  delegate logger, to: config
+  delegate logger, dryrun, to: config
   delegate ch_host, ch_port, ch_user, ch_db, ch_ttl, to: config
 
   def initialize(@config)

@@ -46,7 +46,7 @@ module Core
   protected def load_config : Data::Config?
     path = current_config_path
     File.exists?(path) || abort "fatal: config not found: #{path.inspect}\nRun '#{program} init config' first."
-    return Data::Config.load(path: path, logger: logger)
+    return Data::Config.load(path: path, dryrun: dryrun, logger: logger)
   end
 
   protected def load_tables_from(path : String) : Array(String)

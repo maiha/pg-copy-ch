@@ -1,2 +1,0 @@
-FROM alpine/make
-RUN apk add --no-cache bash

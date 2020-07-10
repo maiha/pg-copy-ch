@@ -5,7 +5,7 @@ class Data::Pg::Client
   private var meta_sql_path : String
   private var meta_csv_path : String
 
-  delegate logger, to: config
+  delegate logger, dryrun, to: config
   delegate pg_ttl_meta, to: config
 
   def initialize(@config)
@@ -42,12 +42,14 @@ class Data::Pg::Client
     return File.read(csv)
   end
 
-  def psql(cmd : String)
+  def psql(arg : String)
     psql = config.resolve(config.pg_psql, group: "postgres")
+    cmd  = "#{psql} #{arg}"
 
+    dryrun(cmd)
     shell = Shell::Seq.new(abort_on_error: true)
-    logger.debug "pg: #{psql} #{cmd}"
-    shell.run!("#{psql} #{cmd}")
+    logger.debug "pg: #{cmd}"
+    shell.run!(cmd)
     shell.stderr.empty? || raise shell.stderr
   end
 end

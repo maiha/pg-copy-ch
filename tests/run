@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -eu
+dir=$(dirname ${BASH_SOURCE:-$0})
+
+for x in $(find $dir  -maxdepth 1 -name '*_test.sh' | sort); do
+  echo "----------------------------------------------------------------------"
+  echo "-- `basename $x`"
+  echo "----------------------------------------------------------------------"
+  ./$x || exit 255
+done

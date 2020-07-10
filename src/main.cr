@@ -30,6 +30,8 @@ class Main < Cmds::Cli::Default
     else
       super(args)
     end
+  rescue dryrun : Dryrun
+    STDOUT.puts "(dryrun) #{dryrun}".colorize(:yellow)
   rescue err
     msg = err.to_s.chomp
     STDERR.puts msg.colorize(:red) if msg.presence

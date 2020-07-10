@@ -20,7 +20,7 @@ pending() {
 }
 
 # If arg1 is "-1", the content of stdout is also displayed in case of an error.
-run() {
+@run() {
   local show_stdout_when_error=0
   if [[ "$1" = "-1" ]]; then
     shift
@@ -53,7 +53,7 @@ run() {
 }
 
 # Compare the result of the last run with the specified string
-assert() {
+@assert() {
   local exp=$1
 
   if [[ $exp =~ ^-([0-9]+)$ ]]; then
@@ -110,7 +110,7 @@ it() {
 
 # Guarantees that the execution of the code passed in arguments will fail.
 # If the first arg is "-N", it also guarantees that the status code is "N".
-expect_error() {
+@expect_error() {
   local given_code
   if [[ $1 =~ ^-([0-9]+)$ ]]; then
     given_code=${BASH_REMATCH[1]}

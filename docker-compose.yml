@@ -1,15 +1,17 @@
 version: '2'
 services:
   test:
-    build: .
-    command: 'make -f tests/Makefile'
+    image: bashell/alpine-bash
     volumes:
-      - ./bin/pg-copy-ch-dev:/bin/pg-copy-ch
-      - ./tests:/tmp/tests
+      - ./bin/pg-copy-ch-dev:/bin/pg-copy-ch:ro
+      - ./tests:/tmp/tests:ro
     working_dir: /tmp
     depends_on:
       - pg
       - ch
+    environment:
+      - PG_HOST=pg
+      - CH_HOST=ch
   pg:
     image: postgres:9.6
   ch:
