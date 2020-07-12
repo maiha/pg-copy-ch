@@ -9,14 +9,14 @@ green=32
 yellow=33
 cyan=36
 
-colorize() {
+@colorize() {
   color=$1
   shift
   echo -e "\033[1;${color}m$@\033[0m"
 }
 
 pending() {
-  echo $(colorize $yellow "pending: $@")
+  echo $(@colorize $yellow "pending: $@")
 }
 
 # If arg1 is "-1", the content of stdout is also displayed in case of an error.
@@ -35,12 +35,10 @@ pending() {
   set +o pipefail
   set -e
   echo $result > run.exit_status
-  cp -p run.out run.out.0
-  cp -p run.err run.err.0
   if [ $result -ne 0 ]; then
-    echo -n $(colorize $red "Failed: ($result) ")
-    echo -n $(colorize $cyan "$@")
-    echo $(colorize $yellow " [$PWD]")
+    echo -n $(@colorize $red "Failed: ($result) ")
+    echo -n $(@colorize $cyan "$@")
+    echo $(@colorize $yellow " [$PWD]")
     if [[ $show_stdout_when_error -eq 1 ]]; then
       sed -e 's/^/    /' run.out
     fi
@@ -57,11 +55,11 @@ pending() {
   local exp=$1
 
   if [[ $exp =~ ^-([0-9]+)$ ]]; then
-    head $exp run.out.0 > run.exp
+    head $exp run.out > run.exp
     shift
     exp=$1
   else
-    cp run.out.0 run.exp
+    cp run.out run.exp
   fi
 
   # add new line when the run.exp is empty
@@ -78,9 +76,9 @@ pending() {
   set -e
   if [ $result -ne 0 ]
   then
-    echo -n $(colorize $red "Assertion Failed: expected ")
+    echo -n $(@colorize $red "Assertion Failed: expected ")
     echo -ne "\033[1;${cyan}m$INPUT\033[0m"
-    echo $(colorize $yellow " [$PWD]")
+    echo $(@colorize $yellow " [$PWD]")
     echo -e "\033[1;${red}m"
     cat assert.out
     exit $result
@@ -92,7 +90,7 @@ pending() {
 ### test functions
 
 describe() {
-  colorize $green "$@"
+  @colorize $green "$@"
 }
 
 # If it starts with "-N", put N spaces. (default: 2)
@@ -105,7 +103,7 @@ it() {
   if [[ $n -gt 0 ]]; then
     printf "%0.s " {1..$n}
   fi
-  colorize $cyan "$@"
+  @colorize $cyan "$@"
 }
 
 # Guarantees that the execution of the code passed in arguments will fail.
@@ -126,23 +124,21 @@ it() {
     # sed1: indenting
     # sed2: remove ANSI colors
   result=$?
-  cp -p run.out run.out.0
-  cp -p run.err run.err.0
   cat run.err | sed 's/^/    /' | sed -r "s:\x1B\[[0-9;]*[mK]::g"
   set +o pipefail
   set -e
 
   if [ $result -eq 0 ] ; then
-    echo -n $(colorize $red "Expected failure, but succeeded: ")
-    echo -n $(colorize $cyan "$@")
-    echo $(colorize $yellow " [$PWD]")
+    echo -n $(@colorize $red "Expected failure, but succeeded: ")
+    echo -n $(@colorize $cyan "$@")
+    echo $(@colorize $yellow " [$PWD]")
     exit -1
   fi
 
   if [[ ! -z $given_code ]] && [ $result -ne $given_code ]; then
-    echo -n $(colorize $red "Expected exit code=${given_code}, but got ${result}: ")
-    echo -n $(colorize $cyan "$@")
-    echo $(colorize $yellow " [$PWD]")
+    echo -n $(@colorize $red "Expected exit code=${given_code}, but got ${result}: ")
+    echo -n $(@colorize $cyan "$@")
+    echo $(@colorize $yellow " [$PWD]")
     exit -1
   fi
 }
