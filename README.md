@@ -46,6 +46,7 @@ host = "pg-server1"
 port = 5432
 user = "postgres"
 db   = "mydb"
+psql = "psql -h %host -p %port -U %user %db -w"
 ...
 ```
 
@@ -165,12 +166,10 @@ psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
 $ make
 ```
 
-## TODO: Test
-
-Not implemented yet.
+## Test
 
 ```
-$ make test
+$ make ci
 ```
 
 ## Contributing
