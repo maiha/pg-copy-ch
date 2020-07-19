@@ -34,7 +34,7 @@ First, create config file by `init config`.
 
 ```console
 $ pg-copy-ch init config
-Initialized empty cofig in .pg-copy-ch/config
+Initialized empty config in .pg-copy-ch/config
 ```
 
 Then, edit `config` file about connection settings for PostgreSQL and ClickHouse.
