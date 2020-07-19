@@ -10,9 +10,9 @@ class Data::Pg::Meta
       quoted = %Q|"#{c.name}"|
       case c
       when .bool?
-        "CAST(#{quoted} AS int)"
+        "CAST(#{quoted} AS int) AS #{quoted}"
       when .timestamp?
-        "date_trunc('second',#{quoted})"
+        "date_trunc('second',#{quoted}) AS #{quoted}"
       else
         quoted
       end
