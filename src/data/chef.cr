@@ -30,6 +30,7 @@ class Data::Chef
   delegate table, to: recipe
   delegate pg_max_record_size, pg_ttl_count, to: config
   delegate psql, clickhouse_client, to: config
+  delegate pg_before_sql, to: config
 
   def initialize(@recipe, @config, @label, @logger)
   end
@@ -159,7 +160,7 @@ class Data::Chef
       end
     end
 
-    Pretty::File.write(data_sql, recipe.pg.data_sql)
+    Pretty::File.write(data_sql, recipe.pg.data_sql(pg_before_sql: pg_before_sql))
     logger.debug "  created #{data_sql}"
 
     # write tmp then move it to avoid file creation on error

@@ -5,7 +5,7 @@ class Data::Pg::Meta
   def initialize(@table, @columns = nil)
   end
 
-  def data_sql : String
+  def data_sql(pg_before_sql : String) : String
     column = columns.map{|c|
       quoted = %Q|"#{c.name}"|
       case c
@@ -17,7 +17,8 @@ class Data::Pg::Meta
         quoted
       end
     }.join(",")
-    "Copy (Select #{column} From #{table}) To STDOUT With (FORMAT CSV, HEADER TRUE, DELIMITER ',', FORCE_QUOTE *)"
+
+    "#{pg_before_sql}Copy (Select #{column} From #{table}) To STDOUT With (FORMAT CSV, HEADER TRUE, DELIMITER ',', FORCE_QUOTE *)"
   end
   
   def to_clickhouse : Clickhouse::Schema::Create
@@ -49,7 +50,7 @@ class Data::Pg::Meta
     rows.each_with_index do |row, i|
       clue = "line #{i+1}"
 
-      row.size == 6 || raise "expected 6 fields, but got #{row.size} fields"
+      row.size == 6 || raise "CSV expected 6 fields, but got #{row.size} fields"
       # ```
       # table | num |   name   |            type             | notnull | primary_key
       # ------+-----+----------+-----------------------------+---------+-------------
@@ -72,8 +73,11 @@ class Data::Pg::Meta
     raise ParseError.new("#{clue}: #{err}")
   end
   
-  def self.query(table : String? = nil) : String
+  def self.query(table : String? = nil, ignore_pg_catalog : Bool = false) : String
     String.build do |s|
+      and_ignore_pg_catalog = "AND nsp.nspname <> 'pg_catalog'" if ignore_pg_catalog
+      and_filter_by_table   = "AND pgc.relname = '#{table}'"    if table
+
       s.puts <<-EOF
         SELECT DISTINCT
             pgc.relname as table,
@@ -87,19 +91,19 @@ class Data::Pg::Meta
             (pgc.oid = a.attrelid AND pgc.relkind = 'r')
         LEFT JOIN pg_index i ON 
             (pgc.oid = i.indrelid AND i.indkey[0] = a.attnum)
-        LEFT JOIN pg_description com on 
+        LEFT JOIN pg_description com ON 
             (pgc.oid = com.objoid AND a.attnum = com.objsubid)
         LEFT JOIN pg_attrdef def ON 
             (a.attrelid = def.adrelid AND a.attnum = def.adnum)
+        LEFT JOIN pg_namespace nsp ON 
+            (pgc.relnamespace = nsp.oid)
         WHERE a.attnum > 0 AND pgc.oid = a.attrelid
-        AND pg_table_is_visible(pgc.oid)
-        AND NOT a.attisdropped
-      EOF
-  
-      if table
-        s.puts "AND pgc.relname = '#{table}'"
-      end
-      s.puts "ORDER BY pgc.relname, a.attnum"
+          AND pg_table_is_visible(pgc.oid)
+          AND NOT a.attisdropped
+          #{and_ignore_pg_catalog}
+          #{and_filter_by_table}
+        ORDER BY "table", a.attnum
+        EOF
     end
   end
 end

@@ -158,6 +158,17 @@ If it is difficult to write to HOME by cron execution, you can embed it directly
 psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
 ```
 
+### before_sql
+
+
+The `before_sql` allows you to insert an arbitrary SQL.
+This is useful for using not `public` schema but a custom schema.
+
+```toml
+[postgres]
+before_sql      = "SET search_path to myschema,public;"
+```
+
 ## Development
 
 * using [Crystal](http://crystal-lang.org/) on docker

@@ -46,4 +46,4 @@ it "executes psql -h pg -p 5432 -U postgres postgres -w -f .pg-copy-ch/pg/meta.s
   @run  pg-copy-ch init tables -n
   # remove ansi colors
   sed -i -r "s:\x1B\[[0-9;]*[mK]::g" run.out
-  @assert -1 "(dryrun) psql -h pg -p 5432 -U postgres postgres -w -f .pg-copy-ch/pg/meta.sql > .pg-copy-ch/pg/meta.csv.tmp"
+  @assert -1 "(dryrun) psql -q -h pg -p 5432 -U postgres postgres -w -f .pg-copy-ch/pg/meta.sql | sed -e 's/^public.//' > .pg-copy-ch/pg/meta.csv.tmp"

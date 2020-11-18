@@ -15,7 +15,9 @@ class Data::Config < TOML::Config
   i64 "postgres/ttl_data"       , pg_ttl_data
   i64 "postgres/ttl_count"      , pg_ttl_count
   i64 "postgres/max_record_size", pg_max_record_size
-
+  str "postgres/before_sql"     , pg_before_sql
+  bool "postgres/ignore_pg_catalog", pg_ignore_pg_catalog
+  
   str "clickhouse/host", ch_host
   i64 "clickhouse/port", ch_port
   str "clickhouse/user", ch_user
@@ -49,6 +51,18 @@ class Data::Config < TOML::Config
     pg_max_record_size? || INFINITE
   end
   
+  def pg_before_sql : String
+    before = pg_before_sql? || ""
+    before = "#{before}".sub(/[;\s]+\Z/, "").strip
+    before = "#{before};\n" if !before.empty?
+    return before
+  end
+
+  def pg_ignore_pg_catalog : Bool
+    v = pg_ignore_pg_catalog?
+    return v.is_a?(Bool) ? v : true
+  end
+
   def pg_client : Pg::Client
     Pg::Client.new(self)
   end
@@ -123,13 +137,15 @@ class Data::Config < TOML::Config
       port = #{pg_port.inspect}
       user = #{pg_user.inspect}
       db   = #{pg_db.inspect}
-      psql = "psql -h %host -p %port -U %user %db -w"
-      # psql = "PGPASSWORD=foo psql -h %host -p %port -U %user %db -w"
-      # psql = "psql -h %host -p %port -U %user %db -w --dbname=postgres --set=sslmode=require --set=sslrootcert=./sslcert.crt"
+      psql = "psql -q -h %host -p %port -U %user %db -w"
+      # psql = "PGPASSWORD=foo psql -q -h %host -p %port -U %user %db -w"
+      # psql = "psql -q -h %host -p %port -U %user %db -w --dbname=postgres --set=sslmode=require --set=sslrootcert=./sslcert.crt"
       ttl_meta        = #{pg_ttl_meta.inspect}
       ttl_data        = #{pg_ttl_data.inspect}
       ttl_count       = #{pg_ttl_count.inspect}
       max_record_size = #{pg_max_record_size.inspect}
+      # before_sql      = "SET search_path to myschema,public;"
+      ignore_pg_catalog = true
 
       [clickhouse]
       host = #{ch_host.inspect}

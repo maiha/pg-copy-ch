@@ -99,7 +99,7 @@ Cmds.command "copy" do
       abort "Please specify target tables by '-a', '-t', '-f', '-F'.\n#{usage}"
     when 1
       table_recipes = Hash(String, Data::Recipe).new
-      config.pg_client.metas.each do |table, meta|
+      config.pg_client.metas(ignore_dryrun: true).each do |table, meta|
         table_recipes[table] = Data::Recipe::Replace.new(table)
       end
       
