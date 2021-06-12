@@ -13,6 +13,8 @@ services:
       - PG_HOST=pg
       - CH_HOST=ch
   pg:
-    image: postgres:9.6
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
   ch:
     image: yandex/clickhouse-server

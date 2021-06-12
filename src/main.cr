@@ -3,6 +3,7 @@ require "option_parser"
 require "json"
 
 # shards
+require "logger"
 require "var"
 require "try"
 require "cmds"
@@ -28,14 +29,13 @@ class Main < Cmds::Cli::Default
     when "-V", "--version"
       STDOUT.puts Shard.git_description
     else
-      super(args)
+      cmd = Cmds.cmd_table.resolve(args.shift?)
+      cmd.run(args)
     end
   rescue dryrun : Dryrun
     STDOUT.puts "(dryrun) #{dryrun}".colorize(:yellow)
   rescue err
-    msg = err.to_s.chomp
-    STDERR.puts msg.colorize(:red) if msg.presence
-    exit 100
+    handle_error(cmd, err)
   end  
 end
 

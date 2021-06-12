@@ -13,7 +13,7 @@ compile: pg-copy-ch-dev
 
 BUILD_TARGET=
 COMPILE_FLAGS=-Dstatic
-DOCKER=docker run -t -u "`id -u`:`id -g`" -v $(PWD):/v -w /v --rm crystallang/crystal:0.33.0
+DOCKER=docker run -t -u "`id -u`:`id -g`" -v $(PWD):/v -w /v --rm crystallang/crystal:0.36.1
 
 .PHONY: build
 build:
@@ -34,6 +34,10 @@ console:
 
 install: bin/pg-copy-ch
 	@cp -p $< /usr/local/bin/
+
+clean:
+	docker-compose down -v --remove-orphans
+	-$(DOCKER) rm -rf bin lib .shards .crystal
 
 ######################################################################
 ### testing
