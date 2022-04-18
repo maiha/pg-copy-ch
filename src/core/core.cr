@@ -33,6 +33,7 @@ module Core
   var ch_port : Int64  = 9000_i64
   var ch_user : String = "default"
   var ch_db   : String = "default"
+  var ch_password : String = ""
 
   def before
     parser.parse(args)
@@ -102,6 +103,7 @@ module Core
     parser.on("--ch-port PORT", "ClickHouse server port (default: #{ch_port})") {|v| self.ch_port = v.to_i64? || abort "ch_port expects int, but got #{v.inspect}" }
     parser.on("--ch-user USER", "ClickHouse server user (default: #{ch_user})") {|v| self.ch_user = v.presence }
     parser.on("--ch-db DB"    , "ClickHouse server db   (default: #{ch_db})") {|v| self.ch_db = v.presence }
+    parser.on("--ch-password PASSWORD"    , "ClickHouse server password   (default: #{ch_password})") {|v| self.ch_password = v.presence }
     parser.on("-w", "--workdir <WORKDIR>", "Directory where files created (default: #{workdir})") {|v| self.workdir = v.presence }
     parser.on("-c", "--config FILE", "Config file (default: #{current_config_path})") {|v| self.config_path = v.presence }
     parser.on("-l", "--log FILE", "Logging file name (default: STDOUT)") {|v| self.logger_path = v }
