@@ -17,16 +17,17 @@ class Data::Config < TOML::Config
   i64 "postgres/max_record_size", pg_max_record_size
   str "postgres/before_sql"     , pg_before_sql
   bool "postgres/ignore_pg_catalog", pg_ignore_pg_catalog
-  
+
   str "clickhouse/host", ch_host
   i64 "clickhouse/port", ch_port
   str "clickhouse/user", ch_user
   str "clickhouse/db"  , ch_db
+  str "clickhouse/password", ch_password
   i64 "clickhouse/ttl_data"        , ch_ttl_data
   i64 "clickhouse/allow_errors_num", ch_allow_errors_num
   str "clickhouse/engine"          , ch_engine
   str "clickhouse/replace_query"   , ch_replace_query
-  
+
   def initialize(toml, @dryrun, @logger = nil)
     super(toml)
   end
@@ -50,7 +51,7 @@ class Data::Config < TOML::Config
   def pg_max_record_size : Int64
     pg_max_record_size? || INFINITE
   end
-  
+
   def pg_before_sql : String
     before = pg_before_sql? || ""
     before = "#{before}".sub(/[;\s]+\Z/, "").strip
@@ -68,7 +69,7 @@ class Data::Config < TOML::Config
   end
 
   delegate psql, to: pg_client
-  
+
   def ch_ttl_data : Int64
     ch_ttl_data? || 3000_i64
   end
@@ -129,7 +130,7 @@ class Data::Config < TOML::Config
   def build_logger(v) : NoReturn
     raise "fatal: config[logger] type error (#{v.class})"
   end
-  
+
   def to_toml : String
     <<-EOF
       [postgres]
@@ -152,6 +153,7 @@ class Data::Config < TOML::Config
       port = #{ch_port.inspect}
       user = #{ch_user.inspect}
       db   = #{ch_db.inspect}
+      password   = #{ch_password.inspect}
       ttl_data         = #{ch_ttl_data.inspect}
       engine           = "Log"
       allow_errors_num = 3
@@ -181,12 +183,13 @@ class Data::Config < TOML::Config
     config["postgres/port"] = cmd.pg_port
     config["postgres/user"] = cmd.pg_user
     config["postgres/db"  ] = cmd.pg_db
-    
+
     # clickhouse
     config["clickhouse/host"] = cmd.ch_host
     config["clickhouse/port"] = cmd.ch_port
     config["clickhouse/user"] = cmd.ch_user
     config["clickhouse/db"  ] = cmd.ch_db
+    config["clickhouse/password"  ] = cmd.ch_password
 
     return config
   end
