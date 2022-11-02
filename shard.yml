@@ -15,27 +15,19 @@ dependencies:
     github: crystal-lang/logger.cr
   var:
     github: maiha/var.cr
-    version: 1.3.0
   try:
     github: maiha/try.cr
-    version: 0.4.0
   cmds:
     github: maiha/cmds.cr
-    version: 0.5.0
   toml-config:
     github: maiha/toml-config.cr
-    version: 0.7.0
   clickhouse:
     github: maiha/clickhouse.cr
-    version: 0.6.0
   pretty:
     github: maiha/pretty.cr
-    version: 1.0.0
   shell:
     github: maiha/shell.cr
-    version: 0.4.2
   shard:
     github: maiha/shard.cr
-    version: 0.3.1
 
 license: MIT

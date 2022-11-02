@@ -2,7 +2,7 @@ version: 2.0
 shards:
   clickhouse:
     git: https://github.com/maiha/clickhouse.cr.git
-    version: 0.6.0
+    version: 1.0.0
 
   cmds:
     git: https://github.com/maiha/cmds.cr.git
@@ -10,7 +10,7 @@ shards:
 
   jq:
     git: https://github.com/maiha/jq.cr.git
-    version: 0.9.0
+    version: 1.0.0
 
   logger:
     git: https://github.com/crystal-lang/logger.cr.git
@@ -18,11 +18,11 @@ shards:
 
   pretty:
     git: https://github.com/maiha/pretty.cr.git
-    version: 1.0.0
+    version: 1.1.2
 
   shard:
     git: https://github.com/maiha/shard.cr.git
-    version: 0.3.1
+    version: 1.0.0
 
   shell:
     git: https://github.com/maiha/shell.cr.git
@@ -38,7 +38,7 @@ shards:
 
   try:
     git: https://github.com/maiha/try.cr.git
-    version: 0.4.0
+    version: 1.6.0
 
   var:
     git: https://github.com/maiha/var.cr.git

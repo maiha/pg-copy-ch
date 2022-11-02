@@ -13,7 +13,7 @@ compile: pg-copy-ch-dev
 
 BUILD_TARGET=
 COMPILE_FLAGS=-Dstatic
-DOCKER=docker run -t -u "`id -u`:`id -g`" -v $(PWD):/v -w /v --rm crystallang/crystal:0.36.1
+DOCKER=docker run -t -u "`id -u`:`id -g`" -v $(PWD):/v -w /v --rm crystallang/crystal:1.6.1-alpine
 
 .PHONY: build
 build:
