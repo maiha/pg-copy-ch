@@ -36,7 +36,7 @@ install: bin/pg-copy-ch
 	@cp -p $< /usr/local/bin/
 
 clean:
-	docker-compose down -v --remove-orphans
+	docker compose down -v --remove-orphans
 	-$(DOCKER) rm -rf bin lib .shards .crystal
 
 ######################################################################
@@ -46,7 +46,7 @@ clean:
 ci: compile test
 
 test: bin/pg-copy-ch-dev
-	@docker-compose run --rm test ./tests/run
+	@docker compose run --rm test ./tests/run
 
 #- PG_HOST=pg
 #- CH_HOST=ch
